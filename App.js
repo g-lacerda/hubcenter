@@ -128,10 +128,8 @@ export default class hubcenter extends Component {
           grant_type: "password"
         };
 
-        // Convertendo o corpo da requisição para uma string JSON
         const requestBodyString = JSON.stringify(requestBody);
 
-        // Exibindo o corpo da requisição em um alerta
         Alert.alert('Corpo da Requisição', requestBodyString);
 
         const response = await fetch('https://api.teste.hubsoft.com.br/oauth/token', {
@@ -148,14 +146,12 @@ export default class hubcenter extends Component {
           this.setState({ access_token: json.access_token });
         } else {
           // Falha
-          //Alert.alert("Falha", "Mensagem de erro: " + JSON.stringify(json));
+          Alert.alert("Falha", "Mensagem de erro: " + JSON.stringify(json));
         }
       } else {
-        // Falha por falta de dados descriptografados
         Alert.alert("Falha", "Não foi possível recuperar todas as credenciais necessárias.");
       }
     } catch (error) {
-      // Tratamento de erro geral
       Alert.alert("Falha", "Ocorreu um erro: " + error.message);
     }
   }
@@ -180,8 +176,6 @@ export default class hubcenter extends Component {
       });
     }
   };
-
-
 
   render() {
 
@@ -293,18 +287,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  switchContainer: {
-    flexDirection: 'row',
-    paddingLeft: screenWidth / 4.6,
-    //paddingTop: 50
-  },
-  picker: {
-    padding: 1,
-    width: 250,
-    height: 90,
-    alignSelf: 'center',
-
-  },
   img: {
     width: 150,
     height: 150,
@@ -325,38 +307,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#1f1f1f',
     borderBottomWidth: 1
   },
-  inputContainer: {
-    padding: 25,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  inputNumerico: {
-    borderBottomColor: '#eee',
-    borderBottomWidth: 1,
-    fontSize: 20,
-    borderRadius: 12,
-    color: '#eee',
-    width: screenWidth * 0.45,
-    textAlign: 'center',
-  },
-  botaoPequeno: {
-    width: 50,
-    height: 50,
-    backgroundColor: 'transparent',
-    borderColor: '#eee',
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 30,
-  },
-  inputSlider: {
-    width: screenWidth * 0.6,
-    alignSelf: 'center',
-    textAlign: 'center',
-  },
   texto: {
     textAlign: 'center',
     fontSize: 18,
@@ -364,33 +314,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     color: '#1f1f1f',
     fontWeight: 'bold'
-  },
-  textoMaior: {
-    textAlign: 'center',
-    fontSize: 24,
-    paddingTop: 20,
-    color: '#eee',
-    fontWeight: 'bold'
-  },
-  textoUltimoTempo: {
-    textAlign: 'center',
-    fontSize: 18,
-    paddingTop: 2,
-    color: '#eee',
-    fontWeight: 'bold'
-  },
-  botao: {
-    margin: 30,
-    width: buttonWidth,
-    height: buttonWidth,
-    backgroundColor: 'transparent',
-    borderColor: '#eee',
-    borderWidth: 1,
-    color: '#eee',
-    padding: 10,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   botaoFinish: {
     width: "60%",
@@ -416,57 +339,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 20
   },
-  switch: {
-    alignSelf: 'center',
-  },
-  textoSwitch: {
-    fontSize: 18,
-    paddingBottom: 20,
-    paddingTop: 20,
-    color: '#eee',
-    paddingLeft: 10,
-    fontWeight: 'bold'
-  },
-  box1: {
-    backgroundColor: 'red',
-    height: 250,
-    width: 150
-  },
-  box2: {
-    backgroundColor: 'yellow',
-    height: 250,
-    width: 150
-  },
-  box3: {
-    backgroundColor: 'green',
-    height: 250,
-    width: 150
-  },
-  box4: {
-    backgroundColor: 'blue',
-    height: 250,
-    width: 150
-  },
-
   titulo: {
     color: '#0049fa',
     textAlign: 'center',
     fontSize: 28,
     fontWeight: 'bold',
     marginTop: 15,
-  },
-  pizzas: {
-    marginTop: 15,
-    fontSize: 24,
-    textAlign: 'center'
-  },
-
-  pickerWrapper: {
-    marginHorizontal: '20%',
-    marginVertical: 30,
-    borderColor: '#eee',
-    borderWidth: 1,
-    borderRadius: 12,
   },
   divisoria: {
     height: 1,
@@ -481,9 +359,6 @@ const styles = StyleSheet.create({
     width: '70%',
     alignSelf: 'center',
     marginVertical: 2,
-  },
-  sliderContainer: {
-    margin: 25,
   },
   label: {
     marginTop: 20,
