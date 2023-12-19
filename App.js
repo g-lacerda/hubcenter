@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import { Text, View, StyleSheet, TextInput, Button, TouchableOpacity, Dimensions, Image, ScrollView, FlatList, Keyboard, Switch } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { Text, View, StyleSheet, TextInput, TouchableOpacity, Dimensions, Image, ScrollView, FlatList, Keyboard, Switch } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Slider from '@react-native-community/slider';
 import { Alert } from 'react-native';
@@ -32,18 +31,18 @@ export default class hubcenter extends Component {
 
   async componentDidMount() {
     try {
-      const email = await EncryptedStorage.getItem("email").trim();
-      const senha = await EncryptedStorage.getItem("senha").trim();
-      const client_id = await EncryptedStorage.getItem("client_id").trim();
-      const client_secret = await EncryptedStorage.getItem("client_secret").trim();
-      const access_token = await EncryptedStorage.getItem("access_token").trim();
+      const email = await EncryptedStorage.getItem("email");
+      const senha = await EncryptedStorage.getItem("senha");
+      const client_id = await EncryptedStorage.getItem("client_id");
+      const client_secret = await EncryptedStorage.getItem("client_secret");
+      const access_token = await EncryptedStorage.getItem("access_token");
 
       this.setState({
-        email: email || this.state.email.trim(),
-        senha: senha || this.state.senha.trim(),
-        client_id: client_id || this.state.client_id.trim(),
-        client_secret: client_secret || this.state.client_secret.trim(),
-        access_token: access_token || this.state.access_token.trim(),
+        email: email.trim() || this.state.email.trim(),
+        senha: senha.trim() || this.state.senha.trim(),
+        client_id: client_id.trim() || this.state.client_id.trim(),
+        client_secret: client_secret.trim() || this.state.client_secret.trim(),
+        access_token: access_token.trim() || this.state.access_token.trim(),
       });
     } catch (error) {
       console.log(error);
