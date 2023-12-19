@@ -32,18 +32,18 @@ export default class hubcenter extends Component {
 
   async componentDidMount() {
     try {
-      const email = await EncryptedStorage.getItem("email");
-      const senha = await EncryptedStorage.getItem("senha");
-      const client_id = await EncryptedStorage.getItem("client_id");
-      const client_secret = await EncryptedStorage.getItem("client_secret");
-      const access_token = await EncryptedStorage.getItem("access_token");
+      const email = await EncryptedStorage.getItem("email").trim();
+      const senha = await EncryptedStorage.getItem("senha").trim();
+      const client_id = await EncryptedStorage.getItem("client_id").trim();
+      const client_secret = await EncryptedStorage.getItem("client_secret").trim();
+      const access_token = await EncryptedStorage.getItem("access_token").trim();
 
       this.setState({
-        email: email || this.state.email,
-        senha: senha || this.state.senha,
-        client_id: client_id || this.state.client_id,
-        client_secret: client_secret || this.state.client_secret,
-        access_token: access_token || this.state.access_token,
+        email: email || this.state.email.trim(),
+        senha: senha || this.state.senha.trim(),
+        client_id: client_id || this.state.client_id.trim(),
+        client_secret: client_secret || this.state.client_secret.trim(),
+        access_token: access_token || this.state.access_token.trim(),
       });
     } catch (error) {
       console.log(error);
@@ -91,23 +91,23 @@ export default class hubcenter extends Component {
 
     // Verifica e atualiza os valores alterados
     if (needsUpdate('email', prevState.email)) {
-      updateStorage("email", this.state.email);
+      updateStorage("email", this.state.email.trim());
     }
 
     if (needsUpdate('senha', prevState.senha)) {
-      updateStorage("senha", this.state.senha);
+      updateStorage("senha", this.state.senha.trim());
     }
 
     if (needsUpdate('client_id', prevState.client_id)) {
-      updateStorage("client_id", this.state.client_id);
+      updateStorage("client_id", this.state.client_id.trim());
     }
 
     if (needsUpdate('client_secret', prevState.client_secret)) {
-      updateStorage("client_secret", this.state.client_secret);
+      updateStorage("client_secret", this.state.client_secret.trim());
     }
 
     if (needsUpdate('access_token', prevState.access_token)) {
-      updateStorage("access_token", this.state.access_token);
+      updateStorage("access_token", this.state.access_token.trim());
     }
   }
 
