@@ -20,11 +20,6 @@ export default class hubcenter extends Component {
       client_id: null,
       client_secret: null,
       access_token: null,
-      nome: null,
-      idade: null,
-      sexo: null,
-      limite: 0,
-      estudante: false,
       isKeyboardVisible: false,
     };
   }
