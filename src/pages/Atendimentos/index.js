@@ -53,22 +53,23 @@ export default function Atendimentos() {
 
   const [itemsPerPage, setItemsPerPage] = useState('15');
   const onItemsPerPageChange = (value) => {
-    if (value) {
-      let num = parseInt(value.replace(/[^0-9]/g, ''), 10);
-      if (num >= 1 && num <= 100) {
-        setItemsPerPage(String(num)); // Atualiza o estado se estiver dentro do limite
-      } else if (value === '') {
-        setItemsPerPage(''); // Permite campo vazio para limpar
-      } else {
-        setItemsPerPage(num > 100 ? '100' : '1'); // Ajusta para os limites máximos ou mínimos
-      }
+
+    let num = parseInt(value.replace(/[^0-9]/g, ''), 10);
+    if (num >= 1 && num <= 100) {
+      setItemsPerPage(String(num));
+    } else if (value === '') {
+      setItemsPerPage('');
+    } else {
+      setItemsPerPage(num > 100 ? '100' : '1');
     }
+
   };
 
   const [pageRequest, setPageRequest] = useState('1');
   const onPageRequest = (pageRequest) => {
     if (pageRequest > 0 && pageRequest <= last_page) {
       setPageRequest(String(pageRequest));
+      fetchAtendimentos();
     }
   };
 
@@ -84,6 +85,11 @@ export default function Atendimentos() {
 
   const fetchAtendimentos = async () => {
 
+    if (!validateFields()) {
+      Alert.alert("Erro", "Por favor, preencha todos os campos necessários corretamente.");
+      return;
+    }
+
     setLoading(true);
     setAtendimentos(null);
 
@@ -92,10 +98,11 @@ export default function Atendimentos() {
     const formattedStartDate = formatAPIDate(startDate);
     const formattedEndDate = formatAPIDate(endDate);
 
-    const page = pageRequest;
-    console.log('page: ' + page);
+    const page = pageRequest - 1;
 
-    const url = `https://api.teste.hubsoft.com.br/api/v1/integracao/atendimento/paginado/${itemsPerPage}?pagina=${page}&data_inicio=${formattedStartDate}&data_fim=${formattedEndDate}`;
+    console.log('\nPagina: ' + page + '\nItens pp: ' + itemsPerPage + '\nStd: ' + formattedStartDate + '\nEnd: ' + formattedEndDate)
+
+    const url = `https://api.teste.hubsoft.com.br//api/v1/integracao/atendimento/todos?pagina=${page}&itens_por_pagina=${itemsPerPage}&data_inicio=${formattedStartDate}&data_fim=${formattedEndDate}`;
 
     try {
       const response = await fetch(url, {
@@ -110,11 +117,10 @@ export default function Atendimentos() {
       try {
         const json = JSON.parse(text);
         if (response.ok) {
-          setAtendimentos(json.atendimentos.data);
-          setLastPage(json.atendimentos.last_page);
-          setCurrentPage(json.atendimentos.current_page);
+          setAtendimentos(json.atendimentos);
+          setLastPage(json.paginacao.ultima_pagina);
+          setCurrentPage(json.paginacao.pagina_atual);
 
-          console.log('cp ' + current_page)
         } else {
           throw new Error(`Erro ${response.status}: ${text}`);
         }
@@ -140,6 +146,37 @@ export default function Atendimentos() {
     setCloseFilters(value);
   }
 
+  const [fieldErrors, setFieldErrors] = useState({
+    startDate: false,
+    endDate: false,
+    itemsPerPage: false,
+  });
+
+  // Função para validar os campos
+  const validateFields = () => {
+    let errors = {};
+    let hasError = false;
+
+    if (!startDate) {
+      errors.startDate = true;
+      hasError = true;
+    }
+
+    if (!endDate) {
+      errors.endDate = true;
+      hasError = true;
+    }
+
+    let itemsPerPageNum = parseInt(itemsPerPage);
+    if (!itemsPerPageNum || itemsPerPageNum < 1 || itemsPerPageNum > 100) {
+      errors.itemsPerPage = true;
+      hasError = true;
+    }
+
+    setFieldErrors(errors);
+    return !hasError;
+  };
+
   return (
     <View style={styles.container}>
 
@@ -160,7 +197,7 @@ export default function Atendimentos() {
       </View>
 
       <View style={styles.pageCountContainer}>
-        <Text style={styles.pageCount}>Página {current_page} de {last_page}</Text>
+        <Text style={styles.pageCount}>Página {current_page + 1} de {last_page + 1}</Text>
       </View>
 
       {!closeFilters ? (
@@ -169,7 +206,7 @@ export default function Atendimentos() {
           <View style={styles.itensPerPage}>
             <Text style={styles.label}>Quantidade de Itens por página</Text>
             <TextInput
-              style={styles.inputNumerico}
+              style={[styles.inputNumerico, fieldErrors.itemsPerPage && styles.errorBorder]}
               underlineColorAndroid="transparent"
               placeholder='Itens por página'
               placeholderTextColor="rgba(4, 117, 232, 0.3)"
@@ -191,7 +228,7 @@ export default function Atendimentos() {
 
               <Text style={styles.labelData}>Data Início</Text>
 
-              <TouchableOpacity onPress={() => showDatepicker(true)} style={styles.datePickerContainer}>
+              <TouchableOpacity onPress={() => showDatepicker(true)} style={[styles.datePickerContainer, fieldErrors.startDate && styles.errorBorder]}>
                 <MaterialCommunityIcons name="calendar" size={25} color="#0475e8" style={styles.calendarIcon} />
                 <Text style={styles.dataTexto}>
                   {formatDate(startDate)}
@@ -202,7 +239,7 @@ export default function Atendimentos() {
 
               <Text style={styles.labelData}>Data Fim</Text>
 
-              <TouchableOpacity onPress={() => showDatepicker(true)} style={styles.datePickerContainer}>
+              <TouchableOpacity onPress={() => showDatepicker(true)} style={[styles.datePickerContainer, fieldErrors.endDate && styles.errorBorder]}>
                 <MaterialCommunityIcons name="calendar" size={25} color="#0475e8" style={styles.calendarIcon} />
                 <Text style={styles.dataTexto}>
                   {formatDate(endDate)}
@@ -261,7 +298,7 @@ export default function Atendimentos() {
         keyExtractor={(item) => item.id_atendimento.toString()}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
-            <Text style={styles.itemTitle}>{item.protocolo}</Text>
+            <Text style={styles.atendimentoTexto}>{item.protocolo}</Text>
             {/* Renderize outros detalhes do atendimento como desejar */}
           </View>
         )}
@@ -418,7 +455,7 @@ const styles = StyleSheet.create({
     height: '80%',
     opacity: 0.08,
   },
-  itemTitle: {
+  atendimentoTexto: {
     textAlign: 'center',
     fontSize: 18,
     paddingBottom: 20,
@@ -494,6 +531,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 30
+  },
+  errorBorder: {
+    borderBottomColor: 'red',
+    borderBottomWidth: 2,
+    padding: 2
+  },
+  atendimentoContainer: {
+
   }
 
 });
