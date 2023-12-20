@@ -131,7 +131,14 @@ export default function Atendimentos() {
 
   useEffect(() => {
     fetchAtendimentos();
+    setCloseFilters(false);
   }, []);
+
+  const [closeFilters, setCloseFilters] = useState(false);
+
+  const onCloseOrOpenFilters = (value) => {
+    setCloseFilters(value);
+  }
 
   return (
     <View style={styles.container}>
@@ -156,88 +163,109 @@ export default function Atendimentos() {
         <Text style={styles.pageCount}>Página {current_page} de {last_page}</Text>
       </View>
 
-      <View style={styles.itensPerPage}>
-        <Text style={styles.label}>Quantidade de Itens por página</Text>
-        <TextInput
-          style={styles.inputNumerico}
-          underlineColorAndroid="transparent"
-          placeholder='Itens por página'
-          placeholderTextColor="rgba(4, 117, 232, 0.3)"
-          value={itemsPerPage}
-          onChangeText={onItemsPerPageChange}
-          keyboardType='numeric'
-        />
-      </View>
+      {!closeFilters ? (
+        <>
 
-      <View style={styles.filtersContainer}>
-        <TouchableOpacity style={styles.botao} onPress={() => { onPageRequest(parseInt(pageRequest) - 1) }}>
-          <FontAwesome6 name="arrow-left" style={styles.icon} size={30} color="#0475e8" />
-          <Text style={styles.botaoTexto}>
-            Voltar
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.itensPerPage}>
+            <Text style={styles.label}>Quantidade de Itens por página</Text>
+            <TextInput
+              style={styles.inputNumerico}
+              underlineColorAndroid="transparent"
+              placeholder='Itens por página'
+              placeholderTextColor="rgba(4, 117, 232, 0.3)"
+              value={itemsPerPage}
+              onChangeText={onItemsPerPageChange}
+              keyboardType='numeric'
+            />
+          </View>
 
-        <View>
+          <View style={styles.filtersContainer}>
+            <TouchableOpacity style={styles.botao} onPress={() => { onPageRequest(parseInt(pageRequest) - 1) }}>
+              <FontAwesome6 name="arrow-left" style={styles.icon} size={30} color="#0475e8" />
+              <Text style={styles.botaoTexto}>
+                Voltar
+              </Text>
+            </TouchableOpacity>
 
-          <Text style={styles.labelData}>Data Início</Text>
+            <View>
 
-          <TouchableOpacity onPress={() => showDatepicker(true)} style={styles.datePickerContainer}>
-            <MaterialCommunityIcons name="calendar" size={25} color="#0475e8" style={styles.calendarIcon} />
-            <Text style={styles.dataTexto}>
-              {formatDate(startDate)}
-            </Text>
-          </TouchableOpacity>
+              <Text style={styles.labelData}>Data Início</Text>
 
-          <View style={styles.divisoria} />
+              <TouchableOpacity onPress={() => showDatepicker(true)} style={styles.datePickerContainer}>
+                <MaterialCommunityIcons name="calendar" size={25} color="#0475e8" style={styles.calendarIcon} />
+                <Text style={styles.dataTexto}>
+                  {formatDate(startDate)}
+                </Text>
+              </TouchableOpacity>
 
-          <Text style={styles.labelData}>Data Fim</Text>
+              <View style={styles.divisoria} />
 
-          <TouchableOpacity onPress={() => showDatepicker(true)} style={styles.datePickerContainer}>
-            <MaterialCommunityIcons name="calendar" size={25} color="#0475e8" style={styles.calendarIcon} />
-            <Text style={styles.dataTexto}>
-              {formatDate(endDate)}
-            </Text>
-          </TouchableOpacity>
+              <Text style={styles.labelData}>Data Fim</Text>
 
-          <View style={styles.divisoria} />
+              <TouchableOpacity onPress={() => showDatepicker(true)} style={styles.datePickerContainer}>
+                <MaterialCommunityIcons name="calendar" size={25} color="#0475e8" style={styles.calendarIcon} />
+                <Text style={styles.dataTexto}>
+                  {formatDate(endDate)}
+                </Text>
+              </TouchableOpacity>
 
-        </View>
-        {show && (
-          <DateTimePicker
-            testID="dateTimePicker"
-            value={isStartPicker ? startDate : endDate}
-            mode={mode}
-            is24Hour={true}
-            display="default"
-            onChange={onChange}
-          />
-        )}
-        <TouchableOpacity style={styles.botao} onPress={() => onPageRequest(parseInt(pageRequest) + 1)}>
-          <FontAwesome6 name="arrow-right" style={styles.icon} size={30} color="#0475e8" />
-          <Text style={styles.botaoTexto}>
-            Próximo
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.searchContainer}>
-        <TouchableOpacity onPress={() => fetchAtendimentos()} style={styles.searchButton}>
-          <Text style={styles.dataTexto}>
-            Carregar
-          </Text>
-        </TouchableOpacity>
-      </View>
+              <View style={styles.divisoria} />
 
-        <FlatList
-          style={{ flexGrow: 1 }}
-          data={atendimentos}
-          keyExtractor={(item) => item.id_atendimento.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.itemContainer}>
-              <Text style={styles.itemTitle}>{item.protocolo}</Text>
-              {/* Renderize outros detalhes do atendimento como desejar */}
             </View>
-          )}
-        />
+            {show && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={isStartPicker ? startDate : endDate}
+                mode={mode}
+                is24Hour={true}
+                display="default"
+                onChange={onChange}
+              />
+            )}
+            <TouchableOpacity style={styles.botao} onPress={() => onPageRequest(parseInt(pageRequest) + 1)}>
+              <FontAwesome6 name="arrow-right" style={styles.icon} size={30} color="#0475e8" />
+              <Text style={styles.botaoTexto}>
+                Próximo
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.searchContainer}>
+            <TouchableOpacity onPress={() => fetchAtendimentos()} style={styles.searchButton}>
+              <Text style={styles.dataTexto}>
+                Carregar
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+
+          <TouchableOpacity onPress={() => onCloseOrOpenFilters(true)}>
+            <View style={styles.closeOpenFilters}>
+              <Ionicons name="chevron-up" size={30} color="#0475e8" />
+            </View>
+          </TouchableOpacity>
+        </>
+
+      ) : (
+
+        <TouchableOpacity onPress={() => onCloseOrOpenFilters(false)}>
+          <View style={styles.closeOpenFilters}>
+            <Ionicons name="chevron-down" size={30} color="#0475e8" />
+          </View>
+        </TouchableOpacity>
+      )}
+
+
+      <FlatList
+        style={{ flexGrow: 1 }}
+        data={atendimentos}
+        keyExtractor={(item) => item.id_atendimento.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.itemContainer}>
+            <Text style={styles.itemTitle}>{item.protocolo}</Text>
+            {/* Renderize outros detalhes do atendimento como desejar */}
+          </View>
+        )}
+      />
     </View>
   );
 }
@@ -308,6 +336,13 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     height: 80,
+    backgroundColor: 'rgba(0, 0, 0, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingHorizontal: 10,
+  },
+  closeOpenFilters: {
+    height: 30,
     backgroundColor: 'rgba(0, 0, 0, 0.06)',
     alignItems: 'center',
     justifyContent: 'space-around',
