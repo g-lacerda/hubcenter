@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, StyleSheet, TextInput, TouchableOpacity, Dimensions, Image, ScrollView, Keyboard, Switch } from 'react-native';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { useNavigation } from '@react-navigation/native';
 
-import Home from '../Home';
-
 export default function Login() {
+
+    const initialCheckDone = useRef(false);
+
 
     const navigation = useNavigation();
     const [credentials, setCredentials] = useState({
@@ -30,25 +31,35 @@ export default function Login() {
 
     const updateField = async (field, value) => {
         setCredentials(prev => {
-          const newCredentials = { ...prev, [field]: value };
-          updateStorage(field, value); // Persistir a mudança imediatamente
-          return newCredentials;
+            const newCredentials = { ...prev, [field]: value };
+            updateStorage(field, value); // Persistir a mudança imediatamente
+            return newCredentials;
         });
-      };
-      
+    };
 
     useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+          // Isso será chamado quando a tela estiver focada
+          setCredentials((creds) => ({ ...creds, senha: '' })); // Limpe o estado da senha
+        });
+      
+        return unsubscribe;
+      }, [navigation]);
+
+    useEffect(() => {
+
         const loadData = async () => {
             try {
+
                 const email = await EncryptedStorage.getItem("email") || '';
                 const senha = await EncryptedStorage.getItem("senha") || '';
                 const client_id = await EncryptedStorage.getItem("client_id") || '';
                 const client_secret = await EncryptedStorage.getItem("client_secret") || '';
                 const access_token = await EncryptedStorage.getItem("access_token") || '';
-                
+
                 const manter_login = await AsyncStorage.getItem("manter_login");
                 const manterLoginBool = manter_login === 'true';
-        
+
                 setCredentials({
                     email: email.trim(),
                     senha: senha.trim(),
@@ -58,13 +69,17 @@ export default function Login() {
                     manter_login: manterLoginBool,
                     isKeyboardVisible: false,
                 });
+
+                initialCheckDone.current = true;
+
+                console.log('a ' + credentials.manter_login, !initialCheckDone.current)
+                
             } catch (error) {
                 console.log(error);
             }
-        };        
+        };
 
         loadData();
-
 
         const keyboardDidShowListener = Keyboard.addListener(
             'keyboardDidShow',
@@ -92,7 +107,7 @@ export default function Login() {
 
         if (stringValue !== undefined && stringValue !== '') {
             try {
-                if (key != 'manter_login'){
+                if (key != 'manter_login') {
                     await EncryptedStorage.setItem(key, stringValue);
                 } else {
                     await AsyncStorage.setItem(key, stringValue);
@@ -102,7 +117,6 @@ export default function Login() {
             }
         }
     };
-
 
     useEffect(() => {
         Object.entries(credentials).forEach(([key, value]) => {
@@ -151,13 +165,18 @@ export default function Login() {
                     // Falha
                     Alert.alert("Falha (" + response.status + ")", "Mensagem de erro:\n" + json.msg);
                 }
-            } else {
-                Alert.alert("Falha", "Não foi possível recuperar todas as credenciais necessárias.");
             }
         } catch (error) {
             Alert.alert("Falha", "Ocorreu um erro: " + error.message);
         }
     }
+
+    useEffect(() => {
+        if (credentials.manter_login && !initialCheckDone.current) {
+            initialCheckDone.current = true;
+            verificarTokenEBuscarAtendimentos();
+        }
+    }, [credentials.manter_login]);
 
 
     const validarLogin = async () => {
@@ -252,24 +271,12 @@ export default function Login() {
 
 
             if (token.length > 1) {
-                Alert.alert('Novo token gerado', 'Ok');
-
                 verificarTokenEBuscarAtendimentos();
-            } else {
-                Alert.alert('Falha ao atualizar token', 'Retornando a tela de Login');
-                navigation.navigate('Login');
             }
         } catch (error) {
             console.error(error);
-            navigation.navigate('Login');
         }
     };
-
-    useEffect(() => {
-        if (credentials.manter_login) {
-            verificarTokenEBuscarAtendimentos();
-        }
-    }, []);
 
     return (
         <View style={styles.container}>
@@ -337,9 +344,9 @@ export default function Login() {
                         trackColor={{ false: "rgba(0, 0, 0, 0.2)", true: "#0475e8" }}
                         style={styles.switch}
                     />
-                    
+
                     <Text style={styles.textoSwitch}>
-                        Manter Login {credentials.manter_login ? 'true' : 'false'}
+                        Manter Login
                     </Text>
 
                 </View>

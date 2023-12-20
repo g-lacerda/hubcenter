@@ -14,42 +14,48 @@ export default function Home() {
 
   const logout = async () => {
     const token = await EncryptedStorage.getItem("access_token");
-  
+
     if (!token) {
-        navigation.navigate('Login');
-        return;
+      navigation.navigate('Login');
+      return;
     }
-  
-    const url = 'https://teste.hubsoft.com.br/api/logout';
-  
+
+    const url = 'https://teste.hubsoft.com.br/api/logout'
+
     try {
-        const response = await fetch(`${url}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-        });
-  
-        //const json = await response.json();
-  
-        if (response.ok) {
-            Alert.alert('Sucesso', 'Logout realizado com sucesso');
-            await EncryptedStorage.setItem('access_token', '');
-            navigation.navigate('Login');
-        } else if (response.status === 401) {
-          const text = await response.text(); // Tente ler como texto
-  
-          Alert.alert('Falha no Logout (' + response.status + ')', 'Logout falhou.\n' + text);
-        } else {
-          const text = await response.text(); // Tente ler como texto
-  
-            Alert.alert('Falha no Logout (' + response.status + ')', 'Logout falhou.\n' + text);
-        }
+      const response = await fetch(`${url}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      
+
+      if (response.ok) {
+        Alert.alert('Sucesso', 'Logout realizado com sucesso');
+        await EncryptedStorage.setItem('access_token', '');
+        await EncryptedStorage.setItem('senha', '');
+        
+        navigation.navigate('Login');
+      } else if (response.status === 401) {
+        const text = await response.text(); 
+
+        Alert.alert('Falha no Logout (' + response.status + ')', 'Logout falhou.\n' + text);
+      } else {
+        const text = await response.text();
+
+        Alert.alert('Falha no Logout (' + response.status + ')', 'Logout falhou.\n' + text);
+      }
     } catch (error) {
-        console.error(error);
+      console.error(error);
     }
   };
+
+  const redirectPage = async (page) => {
+    navigation.navigate(page);
+}
 
   return (
     <View style={styles.container}>
@@ -62,12 +68,12 @@ export default function Home() {
           </View>
         </TouchableOpacity>
 
-        <Text style={styles.titulo}>Home</Text>
+        <Text style={styles.titulo}>Hubcenter</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
 
-        <TouchableOpacity style={styles.botao} onPress={() => { }}>
+        <TouchableOpacity style={styles.botao} onPress={() => { redirectPage('Atendimentos') }}>
           <MaterialCommunityIcons name="calendar-clock" style={styles.icon} size={40} color="#0475e8" />
           <Text style={styles.botaoTexto}>
             Atendimentos e OS
@@ -147,7 +153,7 @@ const styles = StyleSheet.create({
     height: 125,
     backgroundColor: 'transparent',
     borderColor: '#0475e8',
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -158,7 +164,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 10,
-    fontSize: 16,
+    fontSize: 15,
   },
   titulo: {
     color: '#eee',
@@ -170,15 +176,15 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   logoutButton: {
-    position: 'absolute', // Posiciona sobre o contêiner
+    position: 'absolute', 
     alignItems: 'center',
     padding: 5,
     left: 10,
     top: 4,
   },
   headerIconContainer: {
-    alignItems: 'center', // Centraliza verticalmente no contêiner
-    justifyContent: 'center', // Centraliza horizontalmente no contêiner
+    alignItems: 'center', 
+    justifyContent: 'center', 
 
   },
   logoutText: {
@@ -188,7 +194,7 @@ const styles = StyleSheet.create({
     paddingRight: 5
   },
   backgroundArea: {
-    // Posicione e dimensione esta View para que corresponda à área vermelha
+    
     position: 'absolute',
     top: "40%",
     left: 0,
