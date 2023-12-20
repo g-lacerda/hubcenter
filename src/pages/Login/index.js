@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, Dimensions, Image, ScrollView, FlatList, Keyboard, Switch } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import Slider from '@react-native-community/slider';
+import { Text, View, StyleSheet, TextInput, TouchableOpacity, Dimensions, Image, ScrollView, Keyboard, Switch } from 'react-native';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EncryptedStorage from 'react-native-encrypted-storage';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 
 import Home from '../Home';
 
@@ -19,6 +16,7 @@ export default function Login() {
         client_id: '',
         client_secret: '',
         access_token: '',
+        manter_login: '',
         isKeyboardVisible: false,
     });
 
@@ -30,10 +28,14 @@ export default function Login() {
     });
 
 
-    const updateField = (field, value) => {
-        setCredentials(prev => ({ ...prev, [field]: value }));
-        setBorderColors(prev => ({ ...prev, [`${field}BorderColor`]: '#1f1f1f' }));
-    };
+    const updateField = async (field, value) => {
+        setCredentials(prev => {
+          const newCredentials = { ...prev, [field]: value };
+          updateStorage(field, value); // Persistir a mudança imediatamente
+          return newCredentials;
+        });
+      };
+      
 
     useEffect(() => {
         const loadData = async () => {
@@ -43,20 +45,23 @@ export default function Login() {
                 const client_id = await EncryptedStorage.getItem("client_id") || '';
                 const client_secret = await EncryptedStorage.getItem("client_secret") || '';
                 const access_token = await EncryptedStorage.getItem("access_token") || '';
-
+                
+                const manter_login = await AsyncStorage.getItem("manter_login");
+                const manterLoginBool = manter_login === 'true';
+        
                 setCredentials({
                     email: email.trim(),
                     senha: senha.trim(),
                     client_id: client_id.trim(),
                     client_secret: client_secret.trim(),
                     access_token: access_token.trim(),
+                    manter_login: manterLoginBool,
                     isKeyboardVisible: false,
                 });
             } catch (error) {
                 console.log(error);
             }
-        };
-
+        };        
 
         loadData();
 
@@ -77,24 +82,32 @@ export default function Login() {
         };
     }, []);
 
+    const updateStorage = async (key, value) => {
+        let stringValue = '';
+        if (typeof value === 'boolean') {
+            stringValue = value ? 'true' : 'false';
+        } else {
+            stringValue = value.trim();
+        }
+
+        if (stringValue !== undefined && stringValue !== '') {
+            try {
+                if (key != 'manter_login'){
+                    await EncryptedStorage.setItem(key, stringValue);
+                } else {
+                    await AsyncStorage.setItem(key, stringValue);
+                }
+            } catch (error) {
+                console.error(`Erro ao salvar ${key}:`, error);
+            }
+        }
+    };
+
 
     useEffect(() => {
-
-        const updateStorage = async (key, value) => {
-            if (value !== undefined && value !== '') {
-                try {
-                    await EncryptedStorage.setItem(key, value.trim());
-                } catch (error) {
-                    console.error(`Erro ao salvar ${key}:`, error);
-                }
-            }
-        };
-
-        updateStorage("email", credentials.email);
-        updateStorage("senha", credentials.senha);
-        updateStorage("client_id", credentials.client_id);
-        updateStorage("client_secret", credentials.client_secret);
-        updateStorage("access_token", credentials.access_token);
+        Object.entries(credentials).forEach(([key, value]) => {
+            updateStorage(key, value);
+        });
     }, [credentials]);
 
 
@@ -105,7 +118,7 @@ export default function Login() {
             const senha_descriptografada = await EncryptedStorage.getItem("senha");
             const client_id_descriptografado = await EncryptedStorage.getItem("client_id");
             const client_secret_descriptografado = await EncryptedStorage.getItem("client_secret");
-    
+
             if (email_descriptografado && senha_descriptografada && client_id_descriptografado && client_secret_descriptografado) {
                 const requestBody = {
                     client_id: client_id_descriptografado,
@@ -114,9 +127,9 @@ export default function Login() {
                     password: senha_descriptografada,
                     grant_type: "password"
                 };
-    
+
                 const requestBodyString = JSON.stringify(requestBody);
-    
+
                 const response = await fetch('https://api.teste.hubsoft.com.br/oauth/token', {
                     method: 'POST',
                     headers: {
@@ -124,9 +137,9 @@ export default function Login() {
                     },
                     body: requestBodyString,
                 });
-    
+
                 const json = await response.json();
-    
+
                 if (response.ok) {
                     // Sucesso
                     setCredentials(currentCredentials => ({
@@ -136,7 +149,7 @@ export default function Login() {
                     redirectHome();
                 } else {
                     // Falha
-                    Alert.alert("Falha", "Mensagem de erro: " + JSON.stringify(json));
+                    Alert.alert("Falha (" + response.status + ")", "Mensagem de erro:\n" + json.msg);
                 }
             } else {
                 Alert.alert("Falha", "Não foi possível recuperar todas as credenciais necessárias.");
@@ -145,12 +158,12 @@ export default function Login() {
             Alert.alert("Falha", "Ocorreu um erro: " + error.message);
         }
     }
-    
+
 
     const validarLogin = async () => {
         const { email, senha, client_id, client_secret } = credentials;
         if (!email || !senha || !client_id || !client_secret) {
-            setBorderColors({ // Atualiza o estado de borderColors
+            setBorderColors({
                 emailBorderColor: !email ? 'red' : '#1f1f1f',
                 senhaBorderColor: !senha ? 'red' : '#1f1f1f',
                 clientIdBorderColor: !client_id ? 'red' : '#1f1f1f',
@@ -158,10 +171,16 @@ export default function Login() {
             });
             Alert.alert("Falha", "Preencha todos os campos para continuar.");
         } else {
+            setBorderColors({
+                emailBorderColor: !email ? 'red' : '#1f1f1f',
+                senhaBorderColor: !senha ? 'red' : '#1f1f1f',
+                clientIdBorderColor: !client_id ? 'red' : '#1f1f1f',
+                clientSecretBorderColor: !client_secret ? 'red' : '#1f1f1f',
+            });
             loginApi();
         }
     };
-    
+
 
     const redirectHome = async () => {
         navigation.navigate('Home');
@@ -182,10 +201,79 @@ export default function Login() {
         width: Dimensions.get('window').width * 0.8,
     };
 
+    const verificarTokenEBuscarAtendimentos = async () => {
+        const token = await EncryptedStorage.getItem("access_token");
+
+        if (!token) {
+            await tentarAtualizarToken();
+            if (!token) {
+                return;
+            }
+        }
+
+        const url = 'https://teste.hubsoft.com.br/api/v1/integracao/cliente/atendimento';
+        const params = new URLSearchParams({
+            busca: 'cpf_cnpj',
+            termo_busca: '14653839646',
+            limit: '1',
+            apenas_pendente: 'nao',
+            order_by: 'data_cadastro',
+            order_type: 'asc',
+        });
+
+        try {
+            const response = await fetch(`${url}?${params}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                navigation.navigate('Home');
+            } else if (response.status === 401) {
+                await tentarAtualizarToken();
+            } else {
+                navigation.navigate('Login');
+                Alert.alert('Falha no acesso', 'Retornando a tela de Login\n' + response.status);
+            }
+        } catch (error) {
+            console.error(error);
+            navigation.navigate('Login');
+        }
+    };
+
+
+    const tentarAtualizarToken = async () => {
+        try {
+            await loginApi();
+            const token = await EncryptedStorage.getItem("access_token");
+
+
+            if (token.length > 1) {
+                Alert.alert('Novo token gerado', 'Ok');
+
+                verificarTokenEBuscarAtendimentos();
+            } else {
+                Alert.alert('Falha ao atualizar token', 'Retornando a tela de Login');
+                navigation.navigate('Login');
+            }
+        } catch (error) {
+            console.error(error);
+            navigation.navigate('Login');
+        }
+    };
+
+    useEffect(() => {
+        if (credentials.manter_login) {
+            verificarTokenEBuscarAtendimentos();
+        }
+    }, []);
 
     return (
         <View style={styles.container}>
-            <ScrollView>
+            <ScrollView style={styles.container}>
                 <Image source={require('../../img/hubsoft.png')} style={styles.img} />
                 <View style={styles.divisoriaImg} />
                 <Text style={styles.titulo}>Realize seu Login</Text>
@@ -199,6 +287,7 @@ export default function Login() {
                     value={credentials.email}
                     onChangeText={(text) => updateField('email', text)}
                     textContentType='emailAddress'
+                    keyboardType='email-address'
                 />
 
                 <View style={styles.divisoria} />
@@ -239,6 +328,22 @@ export default function Login() {
                     onChangeText={(text) => updateField('client_secret', text)}
                 />
 
+                <View style={[styles.switchContainer, { transform: [{ scaleX: 1.25 }, { scaleY: 1.25 }] }]}>
+
+                    <Switch
+                        value={credentials.manter_login}
+                        onValueChange={(value) => updateField('manter_login', value)}
+                        thumbColor={credentials.manter_login ? "#eee" : "#767577"}
+                        trackColor={{ false: "rgba(0, 0, 0, 0.2)", true: "#0475e8" }}
+                        style={styles.switch}
+                    />
+                    
+                    <Text style={styles.textoSwitch}>
+                        Manter Login {credentials.manter_login ? 'true' : 'false'}
+                    </Text>
+
+                </View>
+
             </ScrollView>
 
             {!credentials.isKeyboardVisible && (
@@ -260,12 +365,12 @@ export default function Login() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 85,
+        flex: 1,
         backgroundColor: '#eee',
 
     },
     containerBotaoFinish: {
-        flex: 15,
+        height: '15%',
         backgroundColor: '#eee',
         justifyContent: 'center',
         alignItems: 'center',
@@ -335,6 +440,20 @@ const styles = StyleSheet.create({
         marginLeft: 30,
         fontSize: 16,
         color: '#1f1f1f',
+    },
+    switchContainer: {
+        flexDirection: 'row',
+        paddingLeft: '15%',
+    },
+    switch: {
+        alignSelf: 'center',
+    },
+    textoSwitch: {
+        fontSize: 18,
+        paddingBottom: 20,
+        paddingTop: 20,
+        color: '#1f1f1f',
+        paddingLeft: 10,
     },
 
 });
